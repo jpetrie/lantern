@@ -1,0 +1,140 @@
+*lantern.txt*                             CMake integration and project support.
+==============================================================================
+INTRODUCTION
+Lantern provides CMake integration and support for CMake projects.
+
+------------------------------------------------------------------------------
+CONFIGURATION                                                  *lantern.options*
+Lantern's behavior can be customized by calling `require("lantern").setup()` and
+passing a table of options. The available option keys are as follows:
+
+  scope ~
+    The scope for Lantern's tracking of the current project and associated
+    project properties. May be one of:
+
+      "global"  Maintain one current project globally.
+      "window"  Maintain one current project per window.
+      "tab"     Maintain one current project per tab page.
+
+    Note that changing this option at runtime (by calling |lantern.setup()|
+    with a differing value) will discard all existing state, except the
+    project cache itself.
+
+    The default value is "global".
+
+  scan_depth ~
+    The number of directories deep to search for binary directories
+    (identified by the presence of a CMakeCache.txt file) when loading a
+    project from a directory.
+
+    The default value is 2.
+
+  exclude_binary_directory_patterns ~
+    A list of patterns (for |string.match()|) that are used to filter binary
+    directories during project load. Any directory that matches any of the
+    specified patterns will be excluded from the project.
+
+    The default value is an empty list.
+
+  exclude_configuration_name_patterns ~
+    A list of patterns (for |string.match()|) that are used to filter
+    configurations during project load. Any configuration whose name matches
+    any of the specified patterns will be excluded from the project.
+
+    The default value is an empty list.
+
+  exclude_target_name_patterns ~
+    A list of patterns (for |string.match()|) that are used to filter targets
+    during project load. Any target whose name matches any of the specified
+    patterns will be excluded from the project.
+
+    The default value is an empty list.
+
+  run_task ~
+    A function that accepts a list containing the command line for a project
+    task (a clean, build or run operation). The function should execute the 
+    specified command. Setting this to nil will cause Lantern to use its
+    internal handler for commands, which will open a new terminal split and
+    run the command via |jobstart()|.
+
+    The default value is nil.
+
+  client_name ~
+    The name used by Lantern to identify itself to the CMake file API.
+
+    The default value is "lantern".
+
+------------------------------------------------------------------------------
+API                                                                *lantern.api*
+Lantern's Lua API is in the "lantern" module, and provides a variety of
+functions to load and interact with CMake projects.
+
+Functions:
+                                                               *lantern.setup()*
+  setup(options) ~
+    Configures Lantern's options; see |lantern.options| for details.
+
+                                                                *lantern.load()*
+  load(directory) ~
+    Loads a |lantern.Project| table containing project information for the
+    specified `directory`. The loaded project becomes the current project,
+    accessible by calling |lantern.project()|.
+
+                                                             *lantern.project()*
+  project() ~
+    Returns a |lantern.Project| table representing the current project.
+
+                                                       *lantern.configuration()*
+  configuration() ~
+    Returns a |lantern.Configuration| table representing the current
+    configuration.
+    
+                                                   *lantern.set_configuration()*
+  set_configuration(configuation) ~
+    Sets the current configuration to `configuration`, which must be the name of
+    a configuration in the current project's configurations table.
+
+                                                              *lantern.target()*
+  target() ~
+    Returns a |lantern.Target| table representing the current target.
+
+                                                          *lantern.set_target()*
+  set_target(target) ~
+    Sets the current target to `target`, which must be the name of a target in
+    the current configuration's targets table.
+
+                                                                 *lantern.run()*
+  run(task) ~
+      Run the specified `task` (one of "clean", "build" or "run") on the
+      current project using the current configuration and target.
+
+      Note that the "run" task does not implicitly trigger the "build" task.
+
+Types:
+                                                               *lantern.Project*
+  lantern.Project ~
+  Contains information about a project.
+
+    .name           (string)  The name of the project.
+    .root_directory (string)  The root directory of the project.
+    .configurations (table)   The configurations (|lantern.Configuration|) in
+                              the project, indexed by name.
+
+                                                         *lantern.Configuration*
+  lantern.Configuration ~
+  Contains information about the project configuration.
+
+    .name       (string)  The name of the configuration.
+    .directory  (string)  The path to the configuration's binary directory.
+    .targets    (table)   The targets (|lantern.Target|) in the the project,
+                          indexed by name.
+
+                                                                *lantern.Target*
+  lantern.Target ~
+  Contains information about a project target.
+
+    .name       (string)    The name of the target.
+    .artifacts  (string[])  A list of paths to the target's output files.
+
+==============================================================================
+vim:tw=78:ft=help:norl:
