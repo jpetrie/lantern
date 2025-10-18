@@ -148,6 +148,7 @@ M.run = function(task)
   runner(command_line)
 end
 
+
 --- @param from_directory string
 M.load = function(from_directory)
   vim.validate("from_directory", from_directory, "string")
@@ -191,6 +192,9 @@ M.load = function(from_directory)
       local reply_directory = vim.fs.joinpath(binary_directory, ".cmake/api/v1/reply")
       local index_files = vim.fn.glob(vim.fs.joinpath(reply_directory, "index-*.json"), true, true)
       if #index_files > 0 then
+        -- The CMake specification says that the largest index file in lexicographical order is the current file.
+        table.sort(index_files, function (left, right) return left > right end)
+
         local index_json = json.read(index_files[1])
         local responses = vim.tbl_get(index_json, "reply", "client-" .. M.options.client_name, "query.json", "responses")
         for _, response in ipairs(responses or {}) do
