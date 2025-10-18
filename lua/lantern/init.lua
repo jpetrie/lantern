@@ -116,6 +116,7 @@ local function default_run_task(command_line)
   local current_window = vim.api.nvim_get_current_win()
   vim.cmd("botright new")
   vim.fn.jobstart(command_line, {term = true})
+  vim.cmd("normal! G")
   vim.api.nvim_set_current_win(current_window)
 end
 
