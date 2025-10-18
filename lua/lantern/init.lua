@@ -149,18 +149,14 @@ M.run = function(task)
 end
 
 
---- @param from_directory string
-M.load = function(from_directory)
-  vim.validate("from_directory", from_directory, "string")
+--- @param directory string
+M.load = function(directory)
+  vim.validate("directory", directory, "string")
+  directory = vim.fs.abspath(directory)
 
-  local absolute_directory = vim.fn.fnamemodify(from_directory, ":p")
-
-  -- The :p modifier causes absolute_directory to end with a slash, which means :t would produce an empty string, so
-  -- from_directory is used to extract the project name.
-  local name = vim.fn.fnamemodify(from_directory, ":t")
   local project = {
-    name = name,
-    root_directory = absolute_directory,
+    name = vim.fs.basename(directory),
+    root_directory = directory,
     configurations = {},
   }
 
@@ -187,7 +183,7 @@ M.load = function(from_directory)
 
   glob = vim.fs.joinpath(glob, "CMakeCache.txt")
   for _, path in ipairs(vim.fn.glob(glob, true, true)) do
-    local binary_directory = vim.fn.fnamemodify(path, ":h")
+    local binary_directory = vim.fs.dirname(path)
     if not any_matches(binary_directory, M.options.exclude_binary_directory_patterns) then
       local reply_directory = vim.fs.joinpath(binary_directory, ".cmake/api/v1/reply")
       local index_files = vim.fn.glob(vim.fs.joinpath(reply_directory, "index-*.json"), true, true)
