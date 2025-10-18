@@ -17,7 +17,7 @@
 ---
 --- @class (exact) lantern.Project
 --- @field name string The name of the project.
---- @field root_directory string The root directory of the project.
+--- @field directory string The root directory of the project.
 --- @field configurations table<string, lantern.Configuration> The configurations found in the project.
 ---
 --- @class (exact) lantern.State
@@ -156,11 +156,11 @@ M.load = function(directory)
 
   local project = {
     name = vim.fs.basename(directory),
-    root_directory = directory,
+    directory = directory,
     configurations = {},
   }
 
-  local presets_json = presets.load(project.root_directory)
+  local presets_json = presets.load(project.directory)
   for _, preset in ipairs(presets_json or {}) do
     if not any_matches(preset.binary_directory, M.options.exclude_binary_directory_patterns) then
       local configuration = {
@@ -176,7 +176,7 @@ M.load = function(directory)
     end
   end
 
-  local glob = project.root_directory
+  local glob = project.directory
   for _ = 1, M.options.scan_depth do
     glob = vim.fs.joinpath(glob, "*")
   end

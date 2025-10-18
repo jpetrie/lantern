@@ -116,7 +116,7 @@ Types:
   Contains information about a project.
 
     .name           (string)  The name of the project.
-    .root_directory (string)  The root directory of the project.
+    .directory      (string)  The path to the project.
     .configurations (table)   The configurations (|lantern.Configuration|) in
                               the project, indexed by name.
 
