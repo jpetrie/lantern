@@ -1,9 +1,16 @@
+--- @param options string[]
+--- @param prefix string
+--- @return string[]
+local function filter_options(options, prefix)
+  return vim.iter(options):filter(function(option) return option:find(prefix) ~= nil end):totable()
+end
+
 local commands = {
   config = {
     callback = function(arguments) require("lantern").set_configuration(arguments[1]) end,
     completion = function(prefix)
       local options = vim.tbl_keys(require("lantern").project().configurations)
-      return vim.iter(options):filter(function(option) return string.find(option, prefix) ~= nil end):totable()
+      return filter_options(options, prefix)
     end
   },
 
@@ -13,8 +20,11 @@ local commands = {
       local configuration = require("lantern").configuration()
       if configuration ~= nil then
         local options = vim.tbl_keys(configuration.targets)
-        return vim.iter(options):filter(function(option) return string.find(option, prefix) ~= nil end):totable()
+        return filter_options(options, prefix)
       end
+
+      -- There are no targets available if no configuration is active.
+      return {}
     end
   },
 }
@@ -41,8 +51,10 @@ local function lantern_complete(prefix, command, _)
 
   if string.match(command, "^['<,'>]*Lantern[!]*%s+%w*$") then
     local keys = vim.tbl_keys(commands)
-    return vim.iter(keys):filter(function(key) return string.find(key, prefix) ~= nil end):totable()
+    return filter_options(keys, prefix)
   end
+
+  return {}
 end
 
 vim.api.nvim_create_user_command("Lantern", lantern_command, {
