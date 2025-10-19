@@ -78,6 +78,8 @@ Functions:
     specified `directory`. The loaded project becomes the current project,
     accessible by calling |lantern.project()|.
 
+    If `directory` is nil or empty, the current directory is assumed.
+
                                                              *lantern.project()*
   project() ~
     Returns a |lantern.Project| table representing the current project.

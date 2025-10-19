@@ -155,10 +155,13 @@ M.run = function(task)
 end
 
 
---- @param directory string
+--- @param directory string? The directory to load. If nil or empty, the current directory will be used.
 M.load = function(directory)
-  vim.validate("directory", directory, "string")
-  directory = vim.fs.abspath(directory)
+  if directory == nil or #directory == 0 then
+    directory = vim.uv.cwd()
+  else
+    directory = vim.fs.abspath(directory)
+  end
 
   local project = {
     name = vim.fs.basename(directory),
