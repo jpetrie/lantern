@@ -2,6 +2,9 @@ local M = {}
 
 local json = require("lantern.json")
 
+--- @param string string
+--- @param macros table<string, string>
+--- @return string
 local function apply_macros(string, macros)
   local result = string
   for key, value in pairs(macros) do
@@ -11,6 +14,9 @@ local function apply_macros(string, macros)
   return result
 end
 
+--- @param presets_path string
+--- @param macros table<string, string>
+--- @return table
 local function load_presets(presets_path, macros)
   local presets_json = json.read(presets_path)
   local result = {}
@@ -31,7 +37,9 @@ end
 --- @param directory string
 --- @return table?
 M.load = function(directory)
-  directory = vim.fn.fnamemodify(directory, ":p")
+  vim.validate("directory", directory, "string")
+  directory = vim.fs.abspath(directory)
+
   local presets_path = vim.fs.joinpath(directory, "CMakePresets.json")
   if vim.fn.filereadable(presets_path) == 0 then
     return nil
@@ -41,11 +49,12 @@ M.load = function(directory)
   -- Currently, only a subset of macros are supported.
   local macros = {
     sourceDir = directory,
-    sourceParentDir = vim.fn.fnamemodify(directory, ":h"),
-    sourceDirName = vim.fn.fnamemodify(directory, ":t"),
+    sourceParentDir = vim.fs.dirname(directory),
+    sourceDirName = vim.fs.basename(directory),
   }
 
   return load_presets(presets_path, macros)
 end
 
 return M
+
