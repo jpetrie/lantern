@@ -1,7 +1,7 @@
 *lantern.txt*                             CMake integration and project support.
 ==============================================================================
 INTRODUCTION
-Lantern provides CMake integration and support for CMake projects.
+Lantern provides CMake integration and project support.
 
 ------------------------------------------------------------------------------
 CONFIGURATION                                                  *lantern.options*
@@ -16,9 +16,7 @@ passing a table of options. The available option keys are as follows:
       "window"  Maintain one current project per window.
       "tab"     Maintain one current project per tab page.
 
-    Note that changing this option at runtime (by calling |lantern.setup()|
-    with a differing value) will discard all existing state, except the
-    project cache itself.
+    Note that changing this option at runtime will discard all existing state.
 
     The default value is "global".
 
@@ -115,19 +113,25 @@ Types:
   lantern.Project ~
   Contains information about a project.
 
-    .name           (string)  The name of the project.
-    .directory      (string)  The path to the project.
-    .configurations (table)   The configurations (|lantern.Configuration|) in
-                              the project, indexed by name.
+    .name                   (string)  The name of the project.
+    .directory              (string)  The path to the project.
+    .configurations         (table)   The configurations in the project,
+                                      indexed by name.
+    .default_configuration  (string)  The name of the project's default
+                                      configuration, or nil if the project has
+                                      no configurations.
 
                                                          *lantern.Configuration*
   lantern.Configuration ~
   Contains information about the project configuration.
 
-    .name       (string)  The name of the configuration.
-    .directory  (string)  The path to the configuration's binary directory.
-    .targets    (table)   The targets (|lantern.Target|) in the the project,
-                          indexed by name.
+    .name            (string)  The name of the configuration.
+    .directory       (string)  The path to the configuration's binary 
+                               directory.
+    .targets         (table)   The targets in the the project, indexed
+                               by name.
+    .default_target  (string)  The name of the configuration's default target,
+                               or nil if the configuration has no targets.
 
                                                                 *lantern.Target*
   lantern.Target ~
