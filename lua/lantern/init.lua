@@ -1,29 +1,27 @@
-
-
 --- @class (exact) lantern.Options
---- @field project_root_markers string[] Markers that identify a project root.
+--- @field project_root_markers string[]
 --- @field project_search_depth number
---- @field exclude_binary_directory_patterns table
---- @field exclude_configuration_name_patterns table
---- @field exclude_target_name_patterns table
+--- @field exclude_binary_directory_patterns string[]
+--- @field exclude_configuration_name_patterns string[]
+--- @field exclude_target_name_patterns string[]
 --- @field run_task fun(table)?
 --- @field client_name string
 
 --- @class (exact) lantern.Target
---- @field name string The name of the target.
---- @field artifacts string[] A list of absolute paths to the target's artifacts.
+--- @field name string
+--- @field artifacts string[]
 
 --- @class (exact) lantern.Configuration
---- @field name string The name of the configuration.
---- @field directory string The absolute path to the build directory for the configuration.
+--- @field name string
+--- @field directory string
 --- @field targets table<string, lantern.Target>
---- @field default_target string? The name of the default target for the configuration.
+--- @field default_target string?
 
 --- @class (exact) lantern.Project
---- @field name string The name of the project.
---- @field directory string The root directory of the project.
---- @field configurations table<string, lantern.Configuration> The configurations found in the project.
---- @field default_configuration string? The name of the default configuration for the project.
+--- @field name string
+--- @field directory string
+--- @field configurations table<string, lantern.Configuration>
+--- @field default_configuration string?
 
 --- @class (exact) lantern.State
 --- @field current_project lantern.Project?
