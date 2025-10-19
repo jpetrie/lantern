@@ -14,12 +14,14 @@
 --- @field name string The name of the configuration.
 --- @field directory string The absolute path to the build directory for the configuration.
 --- @field targets table<string, lantern.Target>
----
+--- @field default_target string? The name of the default target for the configuration.
+
 --- @class (exact) lantern.Project
 --- @field name string The name of the project.
 --- @field directory string The root directory of the project.
 --- @field configurations table<string, lantern.Configuration> The configurations found in the project.
----
+--- @field default_configuration string? The name of the default configuration for the project.
+
 --- @class (exact) lantern.State
 --- @field current_project lantern.Project?
 --- @field current_configuration_key string?
@@ -98,6 +100,7 @@ local function load_configuration(build_directory, configuration_json)
     name = configuration_json.name,
     directory = build_directory,
     targets = {},
+    default_target = nil,
   }
 
   local reply = vim.fs.joinpath(build_directory, ".cmake/api/v1/reply")
@@ -105,6 +108,9 @@ local function load_configuration(build_directory, configuration_json)
     local target = load_target(build_directory, json.read(vim.fs.joinpath(reply, target_json.jsonFile)))
     if not any_matches(target.name, M.options.exclude_target_name_patterns) then
       configuration.targets[target.name] = target
+      if configuration.default_target == nil then
+        configuration.default_target = target.name
+      end
     end
   end
 
@@ -158,6 +164,7 @@ M.load = function(directory)
     name = vim.fs.basename(directory),
     directory = directory,
     configurations = {},
+    default_configuration = nil,
   }
 
   local presets_json = presets.load(project.directory)
@@ -200,6 +207,9 @@ M.load = function(directory)
               local configuration = load_configuration(binary_directory, configuration_json)
               if not any_matches(configuration.name, M.options.exclude_configuration_name_patterns) then
                 project.configurations[configuration.name] = configuration
+                if project.default_configuration == nil then 
+                  project.default_configuration = configuration.name
+                end
               end
             end
           end
@@ -209,6 +219,7 @@ M.load = function(directory)
   end
 
   state().current_project = project
+  M.set_configuration(project.default_configuration)
 end
 
 --- @return lantern.Project?
@@ -229,6 +240,11 @@ end
 --- @param configuration string?
 M.set_configuration = function(configuration)
   state().current_configuration_key = configuration
+  if configuration ~= nil then
+    state().current_target_key = M.configuration().default_target
+  else
+    state().current_target_key = nil
+  end
 end
 
 --- @return lantern.Target?
