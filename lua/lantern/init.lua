@@ -1,10 +1,8 @@
 
---- @class (exact) lantern.ScanOptions
---- @field markers string[] Markers that identify a project root.
 
 --- @class (exact) lantern.Options
---- @field default_scan_options lantern.ScanOptions? Default options for scan().
---- @field scan_depth number
+--- @field project_root_markers string[] Markers that identify a project root.
+--- @field project_search_depth number
 --- @field exclude_binary_directory_patterns table
 --- @field exclude_configuration_name_patterns table
 --- @field exclude_target_name_patterns table
@@ -40,11 +38,8 @@ local M = {
   options = {
     scope = "global",
 
-    default_scan_options = {
-      markers = {"CMakePresets.json", "CMakeUserPresets.json", ".git"}
-    },
-
-    scan_depth = 2,
+    project_root_markers = {"CMakePresets.json", "CMakeUserPresets.json", ".git"},
+    project_search_depth = 2,
     exclude_binary_directory_patterns = {},
     exclude_configuration_name_patterns = {},
     exclude_target_name_patterns = {},
@@ -163,6 +158,20 @@ M.run = function(task)
   runner(command_line)
 end
 
+--- @param directory string? The directory to initiate the scan from. If nil or empty, the current directory is used.
+M.scan = function(directory)
+  if directory == nil or #directory == 0 then
+    directory = vim.uv.cwd() or vim.env.PWD
+  else
+    directory = vim.fs.abspath(directory)
+  end
+
+  directory = vim.fs.root(directory, M.options.project_root_markers)
+  if directory ~= nil then
+    M.load(directory)
+  end
+end
+
 --- @param directory string? The directory to load. If nil or empty, the current directory will be used.
 M.load = function(directory)
   if directory == nil or #directory == 0 then
@@ -195,7 +204,7 @@ M.load = function(directory)
   end
 
   local glob = project.directory
-  for _ = 1, M.options.scan_depth do
+  for _ = 1, M.options.project_search_depth do
     glob = vim.fs.joinpath(glob, "*")
   end
 
@@ -231,22 +240,6 @@ M.load = function(directory)
 
   state().current_project = project
   M.set_configuration(project.default_configuration)
-end
-
---- @param options lantern.ScanOptions? Scan options. If nil, the configured defaults are used.
---- @param directory string? The directory to initiate the scan from. If nil or empty, the current directory is used.
-M.scan = function(options, directory)
-  options = vim.tbl_extend("keep", options or {}, M.options.default_scan_options)
-  if directory == nil or #directory == 0 then
-    directory = vim.uv.cwd() or vim.env.PWD
-  else
-    directory = vim.fs.abspath(directory)
-  end
-
-  directory = vim.fs.root(directory, options.markers)
-  if directory ~= nil then
-    M.load(directory)
-  end
 end
 
 --- @return lantern.Project?

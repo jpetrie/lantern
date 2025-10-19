@@ -20,14 +20,12 @@ passing a table of options. The available option keys are as follows:
 
     The default value is "global".
 
-  default_scan_options ~
-    The default options for |lantern.scan()|. The default value is a table of:
->lua
-    {
-      markers = {"CMakePresets.json", "CMakeUserPresets.json", ".git"}
-    }
+  project_root_markers ~
+    A list of markers that identify the root directory of a project.
+
+    The default is `{"CMakePresets.json", "CMakeUserPresets.json", ".git"}`.
 <
-  scan_depth ~
+  project_search_depth ~
     The number of directories deep to search for binary directories
     (identified by the presence of a CMakeCache.txt file) when loading a
     project from a directory.
@@ -79,6 +77,14 @@ Functions:
   setup(options) ~
     Configures Lantern's options; see |lantern.options| for details.
 
+                                                                *lantern.scan()*
+  scan(directory) ~
+    Scans from `directory` towards the root of the fileystem for a project. The
+    project is loaded if found. Any directory containing one of the markers in
+    `project_root_markers` is considered a project.
+
+    If `directory` is nil or empty, the current directory is assumed.
+
                                                                 *lantern.load()*
   load(directory) ~
     Loads a |lantern.Project| table containing project information for the
@@ -87,13 +93,6 @@ Functions:
 
     If `directory` is nil or empty, the current directory is assumed.
 
-  scan(options, directory) ~
-    Scans from `directory` towards the root of the fileystem for a project as
-    defined by `options`. The project is loaded if found. Any directory containing
-    one of the markers in `options.markers` is considered a project.
-
-    If `options` is nil, the defaults (configured by |lantern.setup()|) are
-    used. If `directory` is nil or empty, the current directory is used.
 
                                                              *lantern.project()*
   project() ~
