@@ -20,6 +20,7 @@
 --- @class (exact) lantern.Project
 --- @field name string
 --- @field directory string
+--- @field binary_directories string[]
 --- @field configurations table<string, lantern.Configuration>
 --- @field default_configuration string?
 
@@ -50,6 +51,26 @@ local M = {
   state = {},
 }
 
+--- Removes duplicate strings from the input list.
+--- @param list string[]
+--- @return string[]
+local function remove_duplicates(list)
+  local set = {}
+  for _, item in ipairs(list) do
+    if set[item] == nil then
+      set[item] = true
+    end
+  end
+
+  local results = {}
+  for item,_ in pairs(set) do
+    table.insert(results, item)
+  end
+
+  table.sort(results)
+  return results
+end
+
 local function any_matches(value, patterns)
   for _, pattern in ipairs(patterns) do
     if value:match(pattern) then
@@ -58,6 +79,16 @@ local function any_matches(value, patterns)
   end
 
   return false
+end
+
+local function write_query(directory)
+  directory = vim.fs.joinpath(directory, ".cmake/api/v1/query/client-" .. M.options.client_name)
+  vim.fn.mkdir(directory, "p")
+
+  local query_path = vim.fs.joinpath(directory, "query.json")
+  json.write(query_path, {
+    requests = {{kind = "codemodel", version = 2}}
+  })
 end
 
 --- @return lantern.State
@@ -181,6 +212,7 @@ M.load = function(directory)
   local project = {
     name = vim.fs.basename(directory),
     directory = directory,
+    binary_directories = {},
     configurations = {},
     default_configuration = nil,
   }
@@ -188,16 +220,7 @@ M.load = function(directory)
   local presets_json = presets.load(project.directory)
   for _, preset in ipairs(presets_json or {}) do
     if not any_matches(preset.binary_directory, M.options.exclude_binary_directory_patterns) then
-      local configuration = {
-        name = preset.name,
-        directory = preset.binary_directory,
-        targets = {},
-      }
-
-      -- Configurations loaded by presets won't have any target information unless they are replaced, but they will have
-      -- enough information to eventually enable a query to be written into them (and for the configure task to be run for
-      -- them, thus generating reply information).
-      project.configurations[configuration.name] = configuration
+      table.insert(project.binary_directories, preset.binary_directory)
     end
   end
 
@@ -210,6 +233,8 @@ M.load = function(directory)
   for _, path in ipairs(vim.fn.glob(glob, true, true)) do
     local binary_directory = vim.fs.dirname(path)
     if not any_matches(binary_directory, M.options.exclude_binary_directory_patterns) then
+      table.insert(project.binary_directories, binary_directory)
+
       local reply_directory = vim.fs.joinpath(binary_directory, ".cmake/api/v1/reply")
       local index_files = vim.fn.glob(vim.fs.joinpath(reply_directory, "index-*.json"), true, true)
       if #index_files > 0 then
@@ -234,6 +259,11 @@ M.load = function(directory)
         end
       end
     end
+  end
+
+  project.binary_directories = remove_duplicates(project.binary_directories)
+  for _, binary_directory in ipairs(project.binary_directories) do
+    write_query(binary_directory)
   end
 
   state().current_project = project

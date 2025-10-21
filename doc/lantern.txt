@@ -131,6 +131,8 @@ Types:
 
     .name                   (string)  The name of the project.
     .directory              (string)  The path to the project.
+    .binary_directories     (table)   The list of discovered binary
+                                      directories in the project.
     .configurations         (table)   The configurations in the project,
                                       indexed by name.
     .default_configuration  (string)  The name of the project's default

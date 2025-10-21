@@ -7,5 +7,12 @@ M.read = function(file)
   return vim.json.decode(text)
 end
 
+--- @param file string
+--- @param object table
+M.write = function(file, object)
+  local text = vim.json.encode(object)
+  vim.fn.writefile({text}, file)
+end
+
 return M
 
