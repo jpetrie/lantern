@@ -159,6 +159,17 @@ local function default_run_task(command_line)
   vim.api.nvim_set_current_win(current_window)
 end
 
+local function execute(command_line)
+  local runner = M.options.run_task or default_run_task
+  runner(command_line)
+end
+
+--- @param preset string
+M.configure = function(preset)
+  vim.validate("preset", preset, "string")
+  execute({"cmake", "--preset", preset})
+end
+
 --- @param task string
 M.run = function(task)
   local configuration = M.configuration()
@@ -183,8 +194,7 @@ M.run = function(task)
     return
   end
 
-  local runner = M.options.run_task or default_run_task
-  runner(command_line)
+  execute(command_line)
 end
 
 --- @param directory string? The directory to initiate the scan from. If nil or empty, the current directory is used.
