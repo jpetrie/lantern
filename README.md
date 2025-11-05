@@ -28,7 +28,9 @@ Lantern can be installed using your preferred plugin management method. It does 
   vim.print(lantern.target())
 
   -- You can also invoke build tasks (essentially, "cmake --build" and related) on the project.
-  lantern.run("build")
+  lantern.clean()
+  lantern.build()
+  lantern.run()
 ```
 
 See `:h lantern` for more details, including documentation of the project, configuration and target table structure.

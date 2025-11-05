@@ -170,31 +170,33 @@ M.configure = function(preset)
   execute({"cmake", "--preset", preset})
 end
 
---- @param task string
-M.run = function(task)
+M.clean = function()
   local configuration = M.configuration()
   if configuration == nil then
     return
   end
 
+  execute({"cmake", "--build", configuration.directory, "--target", "clean", "--config", configuration.name})
+end
+
+M.build = function()
+  local configuration = M.configuration()
   local target = M.target()
-  if target == nil then
+  if configuration == nil or target == nil then
     return
   end
 
-  local command_line = {"cmake"}
-  if task == "clean" then
-    vim.list_extend(command_line, {"--build", configuration.directory, "--target", "clean", "--config", configuration.name})
-  elseif task == "build" then
-    vim.list_extend(command_line, {"--build", configuration.directory, "--target", target.name, "--config", configuration.name})
-  elseif task == "run" then
-    command_line = {target.artifacts[1]}
-  else
-    vim.notify("Error: " .. task .. " is not a valid task.", vim.log.levels.ERROR)
+  execute({"cmake", "--build", configuration.directory, "--target", target.name, "--config", configuration.name})
+end
+
+M.run = function()
+  local configuration = M.configuration()
+  local target = M.target()
+  if configuration == nil or target == nil then
     return
   end
 
-  execute(command_line)
+  execute({target.artifacts[1]})
 end
 
 --- @param directory string? The directory to initiate the scan from. If nil or empty, the current directory is used.

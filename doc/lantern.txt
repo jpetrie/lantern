@@ -122,12 +122,17 @@ Functions:
     Configure the specified `preset` within the current project (equivalent to
     running "cmake --preset `preset`").
 
-                                                                 *lantern.run()*
-  run(task) ~
-    Run the specified `task` (one of "clean", "build" or "run") on the
-    current project using the current configuration and target.
+                                                               *lantern.clean()*
+  clean() ~
+    Clean the current configuration.
+                                                               *lantern.build()*
+  build() ~
+    Build the current target within the current configuration.
 
-    Note that the "run" task does not implicitly trigger the "build" task.
+                                                                 *lantern.run()*
+  run() ~
+    Run the current target within the current configuration. Note that this
+    does not implicitly trigger a call to `build()`.
 
 Types:
                                                                *lantern.Project*
