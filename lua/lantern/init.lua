@@ -154,6 +154,16 @@ end
 local function default_run_task(command_line)
   local current_window = vim.api.nvim_get_current_win()
   vim.cmd("botright new")
+
+  local job_buffer = vim.api.nvim_get_current_buf()
+  vim.api.nvim_create_autocmd("TermClose", {buffer = job_buffer, callback = function(_)
+    if vim.v.event.status == 0 then
+      vim.api.nvim_buf_delete(job_buffer, {force = true})
+    end
+
+    -- Returning true causes the autocommand to be deleted.
+    return true
+  end})
   vim.fn.jobstart(command_line, {term = true})
   vim.cmd("normal! G")
   vim.api.nvim_set_current_win(current_window)
