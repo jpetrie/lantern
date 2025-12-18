@@ -62,6 +62,12 @@ passing a table of options. The available option keys are as follows:
 
     The default value is nil.
 
+  save_before_task ~
+    A boolean value that indicates whether Lantern should attempt to save (by
+    running |wall|) before running a task.
+
+    The default value is false.
+
   client_name ~
     The name used by Lantern to identify itself to the CMake file API.
 

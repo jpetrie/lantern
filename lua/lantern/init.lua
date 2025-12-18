@@ -5,6 +5,7 @@
 --- @field exclude_configuration_name_patterns string[]
 --- @field exclude_target_name_patterns string[]
 --- @field run_task fun(table)?
+--- @field save_before_task boolean
 --- @field client_name string
 
 --- @class (exact) lantern.Target
@@ -44,6 +45,8 @@ local M = {
     exclude_target_name_patterns = {},
 
     run_task = nil,
+    save_before_task = false,
+
     client_name = "lantern",
   },
 
@@ -170,6 +173,9 @@ local function default_run_task(command_line)
 end
 
 local function execute(command_line)
+  if M.options.save_before_task then
+    vim.cmd("wall")
+  end
   local runner = M.options.run_task or default_run_task
   runner(command_line)
 end
