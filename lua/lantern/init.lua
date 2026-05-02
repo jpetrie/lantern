@@ -174,10 +174,16 @@ end
 
 local function execute(command_line)
   if M.options.save_before_task then
-    vim.cmd("wall")
+    -- pcall(vim.cmd, ...) would cause a warning from the Lua language server, so instead the vim.cmd() call is wrapped
+    -- in a function. See https://github.com/LuaLS/lua-language-server/issues/3272 for details.
+    local okay, error = pcall(function() vim.cmd("wall") end)
+    if okay then
+      local runner = M.options.run_task or default_run_task
+      runner(command_line)
+    else
+      vim.notify(error or "error saving buffers; task not executed", vim.log.levels.ERROR)
+    end
   end
-  local runner = M.options.run_task or default_run_task
-  runner(command_line)
 end
 
 --- @param preset string
