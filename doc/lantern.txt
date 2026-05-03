@@ -55,10 +55,13 @@ passing a table of options. The available option keys are as follows:
 
   run_task ~
     A function that accepts a list containing the command line for a project
-    task (a clean, build or run operation). The function should execute the 
-    specified command. Setting this to nil will cause Lantern to use its
-    internal handler for commands, which will open a new terminal split and
-    run the command via |jobstart()|.
+    task and a completion callback. The function must execute the specified
+    command and invoke the completion callback when the command finishes,
+    passing 0 upon success and any other value on failure.
+
+    Setting this to nil will cause Lantern to use its internal handler for
+    commands, which will open a new terminal split and run the command via
+    |jobstart()|.
 
     The default value is nil.
 

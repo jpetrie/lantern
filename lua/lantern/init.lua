@@ -4,7 +4,7 @@
 --- @field exclude_binary_directory_patterns string[]?
 --- @field exclude_configuration_name_patterns string[]?
 --- @field exclude_target_name_patterns string[]?
---- @field run_task fun(table)?
+--- @field run_task fun(table, fun)?
 --- @field save_before_task boolean?
 --- @field client_name string?
 
@@ -154,7 +154,8 @@ local function load_configuration(build_directory, configuration_json)
 end
 
 --- @param command_line table
-local function default_run_task(command_line)
+--- @param completion_callback fun(number)
+local function default_run_task(command_line, completion_callback)
   local current_window = vim.api.nvim_get_current_win()
   vim.cmd("botright new")
 
@@ -167,19 +168,21 @@ local function default_run_task(command_line)
     -- Returning true causes the autocommand to be deleted.
     return true
   end})
-  vim.fn.jobstart(command_line, {term = true})
+  vim.fn.jobstart(command_line, {term = true, on_exit = function(_, code, _)
+    completion_callback(code)
+  end})
   vim.cmd("normal! G")
   vim.api.nvim_set_current_win(current_window)
 end
 
-local function execute(command_line)
+local function execute(command_line, and_then)
   if M.options.save_before_task then
     -- pcall(vim.cmd, ...) would cause a warning from the Lua language server, so instead the vim.cmd() call is wrapped
     -- in a function. See https://github.com/LuaLS/lua-language-server/issues/3272 for details.
     local okay, error = pcall(function() vim.cmd("wall") end)
     if okay then
       local runner = M.options.run_task or default_run_task
-      runner(command_line)
+      runner(command_line, and_then or function(_) end)
     else
       vim.notify(error or "error saving buffers; task not executed", vim.log.levels.ERROR)
     end
@@ -218,7 +221,11 @@ M.run = function()
     return
   end
 
-  execute({target.artifacts[1]})
+  execute({"cmake", "--build", configuration.directory, "--target", target.name, "--config", configuration.name}, function(code)
+    if code == 0 then
+      execute({target.artifacts[1]})
+    end
+  end);
 end
 
 --- @param directory string? The directory to initiate the scan from. If nil or empty, the current directory is used.
