@@ -282,25 +282,30 @@ M.load = function(directory)
     local binary_directory = vim.fs.dirname(path)
     if not any_matches(binary_directory, M.options.exclude_binary_directory_patterns) then
       table.insert(project.binary_directories, binary_directory)
+    end
+  end
 
-      local reply_directory = vim.fs.joinpath(binary_directory, ".cmake/api/v1/reply")
-      local index_files = vim.fn.glob(vim.fs.joinpath(reply_directory, "index-*.json"), true, true)
-      if #index_files > 0 then
-        -- The CMake specification says that the largest index file in lexicographical order is the current file.
-        table.sort(index_files, function(left, right) return left > right end)
+  project.binary_directories = remove_duplicates(project.binary_directories)
 
-        local index_json = json.read(index_files[1])
-        local responses = vim.tbl_get(index_json, "reply", "client-" .. M.options.client_name, "query.json", "responses")
-        for _, response in ipairs(responses or {}) do
-          if response["kind"] == "codemodel" then
-            local model_json = json.read(vim.fs.joinpath(reply_directory, response.jsonFile))
-            for _, configuration_json in ipairs(model_json.configurations) do
-              local configuration = load_configuration(binary_directory, configuration_json)
-              if not any_matches(configuration.name, M.options.exclude_configuration_name_patterns) then
-                project.configurations[configuration.name] = configuration
-                if project.default_configuration == nil then
-                  project.default_configuration = configuration.name
-                end
+  -- Load query replies from each binary directory, if they exist.
+  for _, binary_directory in ipairs(project.binary_directories) do
+    local reply_directory = vim.fs.joinpath(binary_directory, ".cmake/api/v1/reply")
+    local index_files = vim.fn.glob(vim.fs.joinpath(reply_directory, "index-*.json"), true, true)
+    if #index_files > 0 then
+      -- The CMake specification says that the largest index file in lexicographical order is the current file.
+      table.sort(index_files, function(left, right) return left > right end)
+
+      local index_json = json.read(index_files[1])
+      local responses = vim.tbl_get(index_json, "reply", "client-" .. M.options.client_name, "query.json", "responses")
+      for _, response in ipairs(responses or {}) do
+        if response["kind"] == "codemodel" then
+          local model_json = json.read(vim.fs.joinpath(reply_directory, response.jsonFile))
+          for _, configuration_json in ipairs(model_json.configurations) do
+            local configuration = load_configuration(binary_directory, configuration_json)
+            if not any_matches(configuration.name, M.options.exclude_configuration_name_patterns) then
+              project.configurations[configuration.name] = configuration
+              if project.default_configuration == nil then
+                project.default_configuration = configuration.name
               end
             end
           end
@@ -309,7 +314,6 @@ M.load = function(directory)
     end
   end
 
-  project.binary_directories = remove_duplicates(project.binary_directories)
   for _, binary_directory in ipairs(project.binary_directories) do
     write_query(binary_directory)
   end
