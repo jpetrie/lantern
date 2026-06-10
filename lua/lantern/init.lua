@@ -38,7 +38,7 @@ local M = {
   options = {
     scope = "global",
 
-    project_root_markers = {"CMakePresets.json", "CMakeUserPresets.json", ".git"},
+    project_root_markers = { "CMakePresets.json", "CMakeUserPresets.json", ".git" },
     project_search_depth = 2,
     exclude_binary_directory_patterns = {},
     exclude_configuration_name_patterns = {},
@@ -66,7 +66,7 @@ local function remove_duplicates(list)
   end
 
   local results = {}
-  for item,_ in pairs(set) do
+  for item, _ in pairs(set) do
     table.insert(results, item)
   end
 
@@ -90,7 +90,7 @@ local function write_query(directory)
 
   local query_path = vim.fs.joinpath(directory, "query.json")
   json.write(query_path, {
-    requests = {{kind = "codemodel", version = 2}}
+    requests = { { kind = "codemodel", version = 2 } }
   })
 end
 
@@ -160,17 +160,23 @@ local function default_run_task(command_line, completion_callback)
   vim.cmd("botright new")
 
   local job_buffer = vim.api.nvim_get_current_buf()
-  vim.api.nvim_create_autocmd("TermClose", {buffer = job_buffer, callback = function(_)
-    if vim.v.event.status == 0 then
-      vim.api.nvim_buf_delete(job_buffer, {force = true})
-    end
+  vim.api.nvim_create_autocmd("TermClose", {
+    buffer = job_buffer,
+    callback = function(_)
+      if vim.v.event.status == 0 then
+        vim.api.nvim_buf_delete(job_buffer, { force = true })
+      end
 
-    -- Returning true causes the autocommand to be deleted.
-    return true
-  end})
-  vim.fn.jobstart(command_line, {term = true, on_exit = function(_, code, _)
-    completion_callback(code)
-  end})
+      -- Returning true causes the autocommand to be deleted.
+      return true
+    end
+  })
+  vim.fn.jobstart(command_line, {
+    term = true,
+    on_exit = function(_, code, _)
+      completion_callback(code)
+    end
+  })
   vim.cmd("normal! G")
   vim.api.nvim_set_current_win(current_window)
 end
@@ -192,7 +198,7 @@ end
 --- @param preset string
 M.configure = function(preset)
   vim.validate("preset", preset, "string")
-  execute({"cmake", "--preset", preset})
+  execute({ "cmake", "--preset", preset })
 end
 
 M.clean = function()
@@ -201,7 +207,7 @@ M.clean = function()
     return
   end
 
-  execute({"cmake", "--build", configuration.directory, "--target", "clean", "--config", configuration.name})
+  execute({ "cmake", "--build", configuration.directory, "--target", "clean", "--config", configuration.name })
 end
 
 M.build = function()
@@ -211,7 +217,7 @@ M.build = function()
     return
   end
 
-  execute({"cmake", "--build", configuration.directory, "--target", target.name, "--config", configuration.name})
+  execute({ "cmake", "--build", configuration.directory, "--target", target.name, "--config", configuration.name })
 end
 
 M.run = function()
@@ -221,11 +227,12 @@ M.run = function()
     return
   end
 
-  execute({"cmake", "--build", configuration.directory, "--target", target.name, "--config", configuration.name}, function(code)
-    if code == 0 then
-      execute({target.artifacts[1]})
-    end
-  end);
+  execute({ "cmake", "--build", configuration.directory, "--target", target.name, "--config", configuration.name },
+    function(code)
+      if code == 0 then
+        execute({ target.artifacts[1] })
+      end
+    end);
 end
 
 --- @param directory string? The directory to initiate the scan from. If nil or empty, the current directory is used.
@@ -259,8 +266,8 @@ M.load = function(directory)
   }
 
   local presets_json = presets.load(project.directory)
-  for _, preset in ipairs(presets_json or {}) do
-    if not any_matches(preset.binary_directory, M.options.exclude_binary_directory_patterns) then
+  for _, preset in ipairs(presets_json) do
+    if preset.binary_directory ~= nil and not any_matches(preset.binary_directory, M.options.exclude_binary_directory_patterns) then
       table.insert(project.binary_directories, preset.binary_directory)
     end
   end
@@ -280,7 +287,7 @@ M.load = function(directory)
       local index_files = vim.fn.glob(vim.fs.joinpath(reply_directory, "index-*.json"), true, true)
       if #index_files > 0 then
         -- The CMake specification says that the largest index file in lexicographical order is the current file.
-        table.sort(index_files, function (left, right) return left > right end)
+        table.sort(index_files, function(left, right) return left > right end)
 
         local index_json = json.read(index_files[1])
         local responses = vim.tbl_get(index_json, "reply", "client-" .. M.options.client_name, "query.json", "responses")
@@ -291,7 +298,7 @@ M.load = function(directory)
               local configuration = load_configuration(binary_directory, configuration_json)
               if not any_matches(configuration.name, M.options.exclude_configuration_name_patterns) then
                 project.configurations[configuration.name] = configuration
-                if project.default_configuration == nil then 
+                if project.default_configuration == nil then
                   project.default_configuration = configuration.name
                 end
               end
@@ -366,4 +373,3 @@ M.setup = function(options)
 end
 
 return M
-
