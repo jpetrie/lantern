@@ -76,6 +76,12 @@ passing a table of options. The available option keys are as follows:
 
     The default value is "lantern".
 
+  log_path ~
+    The path to the file to write Lantern's activity log to. If nil, logging
+    is disabled.
+
+    The default value is nil.
+
 ------------------------------------------------------------------------------
 API                                                                *lantern.api*
 Lantern's Lua API is in the "lantern" module, and provides a variety of

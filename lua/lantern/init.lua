@@ -7,6 +7,7 @@
 --- @field run_task fun(table, fun)?
 --- @field save_before_task boolean?
 --- @field client_name string?
+--- @field log_file string?
 
 --- @class (exact) lantern.Target
 --- @field name string
@@ -48,11 +49,24 @@ local M = {
     save_before_task = false,
 
     client_name = "lantern",
+
+    log_file = nil,
   },
 
   --- @type table
   state = {},
 }
+
+local function log(format, ...)
+  if M.options.log_file ~= nil then
+    local file = io.open(M.options.log_file, "a")
+    if file ~= nil then
+      local message = string.format(format, ...);
+      file:write(string.format("[%s] %s\n", os.date(), message))
+      file:close()
+    end
+  end
+end
 
 --- Removes duplicate strings from the input list.
 --- @param list string[]
@@ -89,6 +103,7 @@ local function write_query(directory)
   vim.fn.mkdir(directory, "p")
 
   local query_path = vim.fs.joinpath(directory, "query.json")
+  log("Writing query file: %s", query_path)
   json.write(query_path, {
     requests = { { kind = "codemodel", version = 2 } }
   })
@@ -126,6 +141,7 @@ local function load_target(build_directory, target_json)
     table.insert(target.artifacts, vim.fs.joinpath(build_directory, artifact.path))
   end
 
+  log("Loaded target %s", target.name)
   return target
 end
 
@@ -150,6 +166,7 @@ local function load_configuration(build_directory, configuration_json)
     end
   end
 
+  log("Loaded configuration %s for directory %s", configuration.name, configuration.directory)
   return configuration
 end
 
@@ -257,6 +274,8 @@ M.load = function(directory)
     directory = vim.fs.abspath(directory)
   end
 
+  log("Loading from: %s", directory)
+
   local project = {
     name = vim.fs.basename(directory),
     directory = directory,
@@ -295,6 +314,7 @@ M.load = function(directory)
       -- The CMake specification says that the largest index file in lexicographical order is the current file.
       table.sort(index_files, function(left, right) return left > right end)
 
+      log("Loading reply index: %s", index_files[1])
       local index_json = json.read(index_files[1])
       local responses = vim.tbl_get(index_json, "reply", "client-" .. M.options.client_name, "query.json", "responses")
       for _, response in ipairs(responses or {}) do
@@ -374,6 +394,8 @@ M.setup = function(options)
   if M.options.scope ~= previous_scope then
     M.state = {}
   end
+
+  log("Finished initialization.")
 end
 
 return M
